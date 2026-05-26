@@ -26,6 +26,7 @@ WriteMakefile(
 		'warnings'                => 0,
 		'Carp'                    => 0,
 		'I18N::LangTags::Detect'  => 0,
+		'Object::Configure' => 0.19,
 		'Params::Get'             => 0.13,
 		'Params::Validate::Strict' => 0.31,
 		'Readonly'                => 0,

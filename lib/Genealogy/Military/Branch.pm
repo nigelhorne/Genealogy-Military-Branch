@@ -7,6 +7,7 @@ use 5.014;
 use Carp qw(croak);
 use I18N::LangTags::Detect;
 use Params::Get;
+use Object::Configure 0.19;
 use Readonly;
 use Params::Validate::Strict qw(validate_strict);
 use Return::Set qw(set_return);
@@ -176,10 +177,6 @@ to 0.
 
 A blessed C<Genealogy::Military::Branch> object.
 
-=head3 Side Effects
-
-None.
-
 =head3 Notes
 
 The language is detected and cached once at construction time.
@@ -197,10 +194,10 @@ sub new {
 	my $class = shift;
 
 	# Accept both hashref and flat list; all constructor arguments are optional
-	my $args = Params::Get::get_params(undef, @_) // {};
+	my $args = Params::Get::get_params(undef, \@_) // {};
 
 	# Validate constructor arguments against schema
-	validate_strict({
+	$args = validate_strict({
 		description => 'Genealogy::Military::Branch::new',
 		input       => $args,
 		schema      => $NEW_SCHEMA,
@@ -208,6 +205,9 @@ sub new {
 
 	# Use caller-supplied language or detect from environment
 	my $language = $args->{'language'} // _get_language() // 'en';
+
+	# Load the configuration from a config file, if provided
+	$args = Object::Configure::configure($class, $args);
 
 	# Bless and return the detector object
 	return bless {
@@ -217,8 +217,6 @@ sub new {
 }
 
 =head2 detect
-
-=head3 Purpose
 
 Scans a free-text string for references to military branches and returns
 the localised branch name.
@@ -281,7 +279,7 @@ sub detect {
 	my $self = shift;
 
 	# Normalise parameters: accept positional text string, hash or hashref
-	my $params = Params::Get::get_params('text', @_);
+	my $params = Params::Get::get_params('text', \@_);
 
 	# Validate that text is a required string; validate_strict croaks on failure
 	my $validated = validate_strict({

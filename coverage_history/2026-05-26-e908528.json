@@ -1,0 +1,160 @@
+{
+   "runs" : [
+      {
+         "OS" : "linux",
+         "abstract" : "Extract military branch from free-text genealogy notes",
+         "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
+         "finish" : 1779758941.99391,
+         "name" : "Genealogy-Military-Branch",
+         "perl" : "5.40.4",
+         "run" : "-e",
+         "start" : 1779758939.69661,
+         "version" : "0.01"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Extract military branch from free-text genealogy notes",
+         "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
+         "finish" : 1779758939.82082,
+         "name" : "Genealogy-Military-Branch",
+         "perl" : "5.40.4",
+         "run" : "-e",
+         "start" : 1779758939.82069,
+         "version" : "0.01"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Extract military branch from free-text genealogy notes",
+         "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
+         "finish" : 1779758940.06515,
+         "name" : "Genealogy-Military-Branch",
+         "perl" : "5.40.4",
+         "run" : "t/00-load.t",
+         "start" : 1779758940.04382,
+         "version" : "0.01"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Extract military branch from free-text genealogy notes",
+         "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
+         "finish" : 1779758940.39065,
+         "name" : "Genealogy-Military-Branch",
+         "perl" : "5.40.4",
+         "run" : "t/edge_cases.t",
+         "start" : 1779758940.31272,
+         "version" : "0.01"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Extract military branch from free-text genealogy notes",
+         "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
+         "finish" : 1779758940.77507,
+         "name" : "Genealogy-Military-Branch",
+         "perl" : "5.40.4",
+         "run" : "t/extended_tests.t",
+         "start" : 1779758940.68824,
+         "version" : "0.01"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Extract military branch from free-text genealogy notes",
+         "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
+         "finish" : 1779758941.13421,
+         "name" : "Genealogy-Military-Branch",
+         "perl" : "5.40.4",
+         "run" : "t/function.t",
+         "start" : 1779758941.07408,
+         "version" : "0.01"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Extract military branch from free-text genealogy notes",
+         "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
+         "finish" : 1779758941.49049,
+         "name" : "Genealogy-Military-Branch",
+         "perl" : "5.40.4",
+         "run" : "t/integration.t",
+         "start" : 1779758941.41256,
+         "version" : "0.01"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Extract military branch from free-text genealogy notes",
+         "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
+         "finish" : 1779758941.86934,
+         "name" : "Genealogy-Military-Branch",
+         "perl" : "5.40.4",
+         "run" : "t/unit.t",
+         "start" : 1779758941.7831,
+         "version" : "0.01"
+      }
+   ],
+   "summary" : {
+      "Total" : {
+         "branch" : {
+            "covered" : 20,
+            "error" : 0,
+            "percentage" : 100,
+            "total" : 20,
+            "uncoverable" : 0
+         },
+         "condition" : {
+            "covered" : 20,
+            "error" : 3,
+            "percentage" : 86.9565217391304,
+            "total" : 23,
+            "uncoverable" : 0
+         },
+         "statement" : {
+            "covered" : 62,
+            "percentage" : 100,
+            "total" : 62
+         },
+         "subroutine" : {
+            "covered" : 13,
+            "percentage" : 100,
+            "total" : 13
+         },
+         "total" : {
+            "covered" : 115,
+            "error" : 3,
+            "percentage" : 97.4576271186441,
+            "total" : 118,
+            "uncoverable" : 0
+         }
+      },
+      "blib/lib/Genealogy/Military/Branch.pm" : {
+         "branch" : {
+            "covered" : 20,
+            "error" : 0,
+            "percentage" : 100,
+            "total" : 20,
+            "uncoverable" : 0
+         },
+         "condition" : {
+            "covered" : 20,
+            "error" : 3,
+            "percentage" : 86.9565217391304,
+            "total" : 23,
+            "uncoverable" : 0
+         },
+         "statement" : {
+            "covered" : 62,
+            "percentage" : 100,
+            "total" : 62
+         },
+         "subroutine" : {
+            "covered" : 13,
+            "percentage" : 100,
+            "total" : 13
+         },
+         "total" : {
+            "covered" : 115,
+            "error" : 3,
+            "percentage" : 97.4576271186441,
+            "total" : 118,
+            "uncoverable" : 0
+         }
+      }
+   }
+}

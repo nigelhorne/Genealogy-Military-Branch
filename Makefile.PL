@@ -13,7 +13,7 @@ if($^O eq 'darwin') {
 
 WriteMakefile(
 	ABSTRACT_FROM	=> 'lib/Genealogy/Military/Branch.pm',
-	AUTHOR => 'Nigel Horne <njh@bandsman.co.uk>',
+	AUTHOR => 'Nigel Horne <njh@nigelhorne.com>',
 	NAME => 'Genealogy::Military::Branch',
 	VERSION_FROM => 'lib/Genealogy/Military/Branch.pm',
 	((defined($ExtUtils::MakeMaker::VERSION) && ($ExtUtils::MakeMaker::VERSION >= 6.3002))

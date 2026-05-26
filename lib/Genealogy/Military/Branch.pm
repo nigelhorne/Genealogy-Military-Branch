@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.014;
 
-use Carp qw(carp croak);
+use Carp qw(croak);
 use I18N::LangTags::Detect;
 use Params::Get;
 use Readonly;
@@ -304,7 +304,7 @@ sub detect {
 	# Fall back to the default 'military' key when nothing matched
 	unless(defined $branch) {
 		# Optionally alert the caller that no specific branch was identified
-		carp 'Genealogy::Military::Branch: no military branch detected'
+		Carp::carp 'Genealogy::Military::Branch: no military branch detected'
 			if $self->{'warn_on_error'};
 		$branch = $self->_translate('military');
 	}
@@ -401,7 +401,7 @@ sub _get_language {
 
 =head1 AUTHOR
 
-Nigel Horne C<< <njh@bandsman.co.uk> >>
+Nigel Horne C<< <njh@nigelhorne.com> >>
 
 =head1 BUGS
 

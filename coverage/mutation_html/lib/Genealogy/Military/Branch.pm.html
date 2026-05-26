@@ -299,207 +299,207 @@ Approximate LCSAJ segments: 21<br>
 </span><span class="">    7: use Carp qw(croak);
 </span><span class="">    8: use I18N::LangTags::Detect;
 </span><span class="">    9: use Params::Get;
-</span><span class="">   10: use Readonly;
-</span><span class="">   11: use Params::Validate::Strict qw(validate_strict);
-</span><span class="">   12: use Return::Set qw(set_return);
-</span><span class="">   13: 
-</span><span class="">   14: our $VERSION = &#39;0.01&#39;;
-</span><span class="">   15: 
-</span><span class="">   16: # Schema for new() arguments
-</span><span class="">   17: Readonly my $NEW_SCHEMA =&gt; {
-</span><span class="">   18: 	language =&gt; {
-</span><span class="">   19: 		type     =&gt; &#39;string&#39;,
-</span><span class="">   20: 		optional =&gt; 1,
-</span><span class="">   21: 	},
-</span><span class="">   22: 	warn_on_error =&gt; {
-</span><span class="">   23: 		type     =&gt; &#39;boolean&#39;,
-</span><span class="">   24: 		optional =&gt; 1,
-</span><span class="">   25: 		default  =&gt; 0,
-</span><span class="">   26: 	},
-</span><span class="">   27: };
-</span><span class="">   28: 
-</span><span class="">   29: # Schema for detect() arguments
-</span><span class="">   30: Readonly my $DETECT_SCHEMA =&gt; {
-</span><span class="">   31: 	text =&gt; {
-</span><span class="">   32: 		type =&gt; &#39;string&#39;,
-</span><span class="">   33: 	},
-</span><span class="">   34: };
-</span><span class="">   35: 
-</span><span class="">   36: # Branch detectors tried in specificity order; first match wins.
-</span><span class="">   37: # More-specific patterns must appear before patterns that would also
-</span><span class="">   38: # match them: Merchant Navy before Navy, RAF before Air Force.
-</span><span class="">   39: Readonly my @DETECTORS =&gt; (
-</span><span class="">   40: 	{ pattern =&gt; qr/\bMerchant\s+Navy\b/i,                                key =&gt; &#39;Merchant Navy&#39;       },
-</span><span class="">   41: 	{ pattern =&gt; qr/\bRoyal\s+Flying\s+Corps\b|\bRFC\b/i,                 key =&gt; &#39;Royal Flying Corps&#39;  },
-</span><span class="">   42: 	{ pattern =&gt; qr/\bRoyal\s+Engineers\b/i,                              key =&gt; &#39;Royal Engineers&#39;     },
-</span><span class="">   43: 	{ pattern =&gt; qr/\bRoyal\s+Artillery\b/i,                              key =&gt; &#39;Royal Artillery&#39;     },
-</span><span class="">   44: 	{ pattern =&gt; qr/\bRAF\b|\bRoyal\s+Air\s+Force\b/i,                   key =&gt; &#39;RAF&#39;                 },
-</span><span class="">   45: 	{ pattern =&gt; qr/\bAir\s+Force\b/i,                                    key =&gt; &#39;air force&#39;           },
-</span><span class="">   46: 	{ pattern =&gt; qr/\bRoyal\s+Marines\b|\bMarine\s+Corps\b|\bMarines\b/i, key =&gt; &#39;marines&#39;             },
-</span><span class="">   47: 	{ pattern =&gt; qr/\bNavy\b/i,                                           key =&gt; &#39;navy&#39;                },
-</span><span class="">   48: 	{ pattern =&gt; qr/\bCoast\s+Guard\b/i,                                  key =&gt; &#39;Coast Guard&#39;         },
-</span><span class="">   49: 	{ pattern =&gt; qr/\bNational\s+Guard\b/i,                               key =&gt; &#39;National Guard&#39;      },
-</span><span class="">   50: 	{ pattern =&gt; qr/\b(?:Army|Regiment|Soldier|Infantry|Cavalry)\b/i,     key =&gt; &#39;army&#39;                },
-</span><span class="">   51: );
-</span><span class="">   52: 
-</span><span class="">   53: # Localised branch names keyed by BCP-47 primary subtag, then internal
-</span><span class="">   54: # English key.  Falls back to English if a key has no entry for the
-</span><span class="">   55: # current language.
-</span><span class="">   56: Readonly my %TRANSLATIONS =&gt; (
-</span><span class="">   57: 	&#39;en&#39; =&gt; {
-</span><span class="">   58: 		&#39;navy&#39;               =&gt; &#39;navy&#39;,
-</span><span class="">   59: 		&#39;RAF&#39;                =&gt; &#39;RAF&#39;,
-</span><span class="">   60: 		&#39;army&#39;               =&gt; &#39;army&#39;,
-</span><span class="">   61: 		&#39;military&#39;           =&gt; &#39;military&#39;,
-</span><span class="">   62: 		&#39;marines&#39;            =&gt; &#39;marines&#39;,
-</span><span class="">   63: 		&#39;Royal Engineers&#39;    =&gt; &#39;Royal Engineers&#39;,
-</span><span class="">   64: 		&#39;Royal Artillery&#39;    =&gt; &#39;Royal Artillery&#39;,
-</span><span class="">   65: 		&#39;Royal Flying Corps&#39; =&gt; &#39;Royal Flying Corps&#39;,
-</span><span class="">   66: 		&#39;Merchant Navy&#39;      =&gt; &#39;Merchant Navy&#39;,
-</span><span class="">   67: 		&#39;Coast Guard&#39;        =&gt; &#39;Coast Guard&#39;,
-</span><span class="">   68: 		&#39;National Guard&#39;     =&gt; &#39;National Guard&#39;,
-</span><span class="">   69: 		&#39;air force&#39;          =&gt; &#39;air force&#39;,
-</span><span class="">   70: 	},
-</span><span class="">   71: 	# French translations - subset of English keys
-</span><span class="">   72: 	&#39;fr&#39; =&gt; {
-</span><span class="">   73: 		&#39;navy&#39;      =&gt; &#39;marine&#39;,
-</span><span class="">   74: 		&#39;army&#39;      =&gt; &quot;arm\x{e9}e&quot;,
-</span><span class="">   75: 		&#39;RAF&#39;       =&gt; &#39;RAF&#39;,
-</span><span class="">   76: 		&#39;military&#39;  =&gt; &#39;militaire&#39;,
-</span><span class="">   77: 		&#39;marines&#39;   =&gt; &#39;marines&#39;,
-</span><span class="">   78: 		&#39;air force&#39; =&gt; &quot;arm\x{e9}e de l&#39;air&quot;,
-</span><span class="">   79: 	},
-</span><span class="">   80: 	# German translations - subset of English keys
-</span><span class="">   81: 	&#39;de&#39; =&gt; {
-</span><span class="">   82: 		&#39;navy&#39;      =&gt; &#39;Marine&#39;,
-</span><span class="">   83: 		&#39;army&#39;      =&gt; &#39;Armee&#39;,
-</span><span class="">   84: 		&#39;RAF&#39;       =&gt; &#39;RAF&#39;,
-</span><span class="">   85: 		&#39;military&#39;  =&gt; &quot;Milit\x{e4}r&quot;,
-</span><span class="">   86: 		&#39;air force&#39; =&gt; &#39;Luftwaffe&#39;,
-</span><span class="">   87: 	},
-</span><span class="">   88: );
-</span><span class="">   89: 
-</span><span class="">   90: =head1 NAME
-</span><span class="">   91: 
-</span><span class="">   92: Genealogy::Military::Branch - Extract military branch from free-text genealogy notes
-</span><span class="">   93: 
-</span><span class="">   94: =head1 VERSION
-</span><span class="">   95: 
-</span><span class="">   96: Version 0.01
-</span><span class="">   97: 
-</span><span class="">   98: =head1 SYNOPSIS
-</span><span class="">   99: 
-</span><span class="">  100:     use Genealogy::Military::Branch;
-</span><span class="">  101: 
-</span><span class="">  102:     my $detector = Genealogy::Military::Branch-&gt;new();
-</span><span class="">  103: 
-</span><span class="">  104:     my $branch = $detector-&gt;detect(
-</span><span class="">  105:         text =&gt; &#39;He served in the Royal Navy from 1914 to 1918&#39;,
-</span><span class="">  106:     );
-</span><span class="">  107:     # Returns &#39;navy&#39;
-</span><span class="">  108: 
-</span><span class="">  109:     my $branch = $detector-&gt;detect(
-</span><span class="">  110:         text =&gt; &#39;Served with the RAF in Bomber Command&#39;,
-</span><span class="">  111:     );
-</span><span class="">  112:     # Returns &#39;RAF&#39;
-</span><span class="">  113: 
-</span><span class="">  114:     my $branch = $detector-&gt;detect(
-</span><span class="">  115:         text =&gt; &#39;Some unrelated text&#39;,
-</span><span class="">  116:     );
-</span><span class="">  117:     # Returns &#39;military&#39;
-</span><span class="">  118: 
-</span><span class="">  119: =head1 DESCRIPTION
-</span><span class="">  120: 
-</span><span class="">  121: Scans free-text military service notes from genealogy records and returns
-</span><span class="">  122: the name of the military branch mentioned.  Returns C&lt;&#39;military&#39;&gt; (localised)
-</span><span class="">  123: when no specific branch is recognised.
-</span><span class="">  124: 
-</span><span class="">  125: Designed to replace the C&lt;service()&gt; helper in the C&lt;gedcom&gt; and C&lt;ged2site&gt;
-</span><span class="">  126: distributions, which contain duplicate implementations of the same logic.
-</span><span class="">  127: 
-</span><span class="">  128: Detection patterns cover British, US and Commonwealth branches.  The returned
-</span><span class="">  129: string is localised to the system locale, which is detected from the
-</span><span class="">  130: environment at construction time.
-</span><span class="">  131: 
-</span><span class="">  132: =head1 METHODS
-</span><span class="">  133: 
-</span><span class="">  134: =head2 new
-</span><span class="">  135: 
-</span><span class="">  136: =head3 Purpose
-</span><span class="">  137: 
-</span><span class="">  138: Constructs a new branch detector object.
-</span><span class="">  139: 
-</span><span class="">  140: =head3 API Specification
-</span><span class="">  141: 
-</span><span class="">  142: =head4 Input
-</span><span class="">  143: 
-</span><span class="">  144:     {
-</span><span class="">  145:         language =&gt; {
-</span><span class="">  146:             type     =&gt; &#39;string&#39;,
-</span><span class="">  147:             optional =&gt; 1,
-</span><span class="">  148:         },
-</span><span class="">  149:         warn_on_error =&gt; {
-</span><span class="">  150:             type     =&gt; &#39;boolean&#39;,
-</span><span class="">  151:             optional =&gt; 1,
-</span><span class="">  152:             default  =&gt; 0,
-</span><span class="">  153:         },
-</span><span class="">  154:     }
-</span><span class="">  155: 
-</span><span class="">  156: =head4 Output
-</span><span class="">  157: 
-</span><span class="">  158:     { type =&gt; &#39;object&#39;, isa =&gt; &#39;Genealogy::Military::Branch&#39; }
-</span><span class="">  159: 
-</span><span class="">  160: =head3 Arguments
-</span><span class="">  161: 
-</span><span class="">  162: =over 4
-</span><span class="">  163: 
-</span><span class="">  164: =item * C&lt;language&gt; - BCP-47 primary subtag e.g. C&lt;&#39;en&#39;&gt;, C&lt;&#39;fr&#39;&gt;, C&lt;&#39;de&#39;&gt;.
-</span><span class="">  165: If not given, the language is detected from the environment using
-</span><span class="">  166: C&lt;I18N::LangTags::Detect&gt; and the standard locale environment variables,
-</span><span class="">  167: falling back to C&lt;&#39;en&#39;&gt;.  Optional.
-</span><span class="">  168: 
-</span><span class="">  169: =item * C&lt;warn_on_error&gt; - If true, C&lt;carp&gt; is called when C&lt;detect()&gt; is
-</span><span class="">  170: called and no branch is identified in the supplied text.  Optional, defaults
-</span><span class="">  171: to 0.
-</span><span class="">  172: 
-</span><span class="">  173: =back
-</span><span class="">  174: 
-</span><span class="">  175: =head3 Returns
-</span><span class="">  176: 
-</span><span class="">  177: A blessed C&lt;Genealogy::Military::Branch&gt; object.
-</span><span class="">  178: 
-</span><span class="">  179: =head3 Side Effects
-</span><span class="">  180: 
-</span><span class="">  181: None.
-</span><span class="">  182: 
-</span><span class="">  183: =head3 Notes
-</span><span class="">  184: 
-</span><span class="">  185: The language is detected and cached once at construction time.
-</span><span class="">  186: 
-</span><span class="">  187: =head3 Example
-</span><span class="">  188: 
-</span><span class="">  189:     my $detector = Genealogy::Military::Branch-&gt;new({
-</span><span class="">  190:         language      =&gt; &#39;fr&#39;,
-</span><span class="">  191:         warn_on_error =&gt; 1,
-</span><span class="">  192:     });
-</span><span class="">  193: 
-</span><span class="">  194: =cut
+</span><span class="">   10: use Object::Configure 0.19;
+</span><span class="">   11: use Readonly;
+</span><span class="">   12: use Params::Validate::Strict qw(validate_strict);
+</span><span class="">   13: use Return::Set qw(set_return);
+</span><span class="">   14: 
+</span><span class="">   15: our $VERSION = &#39;0.01&#39;;
+</span><span class="">   16: 
+</span><span class="">   17: # Schema for new() arguments
+</span><span class="">   18: Readonly my $NEW_SCHEMA =&gt; {
+</span><span class="">   19: 	language =&gt; {
+</span><span class="">   20: 		type     =&gt; &#39;string&#39;,
+</span><span class="">   21: 		optional =&gt; 1,
+</span><span class="">   22: 	},
+</span><span class="">   23: 	warn_on_error =&gt; {
+</span><span class="">   24: 		type     =&gt; &#39;boolean&#39;,
+</span><span class="">   25: 		optional =&gt; 1,
+</span><span class="">   26: 		default  =&gt; 0,
+</span><span class="">   27: 	},
+</span><span class="">   28: };
+</span><span class="">   29: 
+</span><span class="">   30: # Schema for detect() arguments
+</span><span class="">   31: Readonly my $DETECT_SCHEMA =&gt; {
+</span><span class="">   32: 	text =&gt; {
+</span><span class="">   33: 		type =&gt; &#39;string&#39;,
+</span><span class="">   34: 	},
+</span><span class="">   35: };
+</span><span class="">   36: 
+</span><span class="">   37: # Branch detectors tried in specificity order; first match wins.
+</span><span class="">   38: # More-specific patterns must appear before patterns that would also
+</span><span class="">   39: # match them: Merchant Navy before Navy, RAF before Air Force.
+</span><span class="">   40: Readonly my @DETECTORS =&gt; (
+</span><span class="">   41: 	{ pattern =&gt; qr/\bMerchant\s+Navy\b/i,                                key =&gt; &#39;Merchant Navy&#39;       },
+</span><span class="">   42: 	{ pattern =&gt; qr/\bRoyal\s+Flying\s+Corps\b|\bRFC\b/i,                 key =&gt; &#39;Royal Flying Corps&#39;  },
+</span><span class="">   43: 	{ pattern =&gt; qr/\bRoyal\s+Engineers\b/i,                              key =&gt; &#39;Royal Engineers&#39;     },
+</span><span class="">   44: 	{ pattern =&gt; qr/\bRoyal\s+Artillery\b/i,                              key =&gt; &#39;Royal Artillery&#39;     },
+</span><span class="">   45: 	{ pattern =&gt; qr/\bRAF\b|\bRoyal\s+Air\s+Force\b/i,                   key =&gt; &#39;RAF&#39;                 },
+</span><span class="">   46: 	{ pattern =&gt; qr/\bAir\s+Force\b/i,                                    key =&gt; &#39;air force&#39;           },
+</span><span class="">   47: 	{ pattern =&gt; qr/\bRoyal\s+Marines\b|\bMarine\s+Corps\b|\bMarines\b/i, key =&gt; &#39;marines&#39;             },
+</span><span class="">   48: 	{ pattern =&gt; qr/\bNavy\b/i,                                           key =&gt; &#39;navy&#39;                },
+</span><span class="">   49: 	{ pattern =&gt; qr/\bCoast\s+Guard\b/i,                                  key =&gt; &#39;Coast Guard&#39;         },
+</span><span class="">   50: 	{ pattern =&gt; qr/\bNational\s+Guard\b/i,                               key =&gt; &#39;National Guard&#39;      },
+</span><span class="">   51: 	{ pattern =&gt; qr/\b(?:Army|Regiment|Soldier|Infantry|Cavalry)\b/i,     key =&gt; &#39;army&#39;                },
+</span><span class="">   52: );
+</span><span class="">   53: 
+</span><span class="">   54: # Localised branch names keyed by BCP-47 primary subtag, then internal
+</span><span class="">   55: # English key.  Falls back to English if a key has no entry for the
+</span><span class="">   56: # current language.
+</span><span class="">   57: Readonly my %TRANSLATIONS =&gt; (
+</span><span class="">   58: 	&#39;en&#39; =&gt; {
+</span><span class="">   59: 		&#39;navy&#39;               =&gt; &#39;navy&#39;,
+</span><span class="">   60: 		&#39;RAF&#39;                =&gt; &#39;RAF&#39;,
+</span><span class="">   61: 		&#39;army&#39;               =&gt; &#39;army&#39;,
+</span><span class="">   62: 		&#39;military&#39;           =&gt; &#39;military&#39;,
+</span><span class="">   63: 		&#39;marines&#39;            =&gt; &#39;marines&#39;,
+</span><span class="">   64: 		&#39;Royal Engineers&#39;    =&gt; &#39;Royal Engineers&#39;,
+</span><span class="">   65: 		&#39;Royal Artillery&#39;    =&gt; &#39;Royal Artillery&#39;,
+</span><span class="">   66: 		&#39;Royal Flying Corps&#39; =&gt; &#39;Royal Flying Corps&#39;,
+</span><span class="">   67: 		&#39;Merchant Navy&#39;      =&gt; &#39;Merchant Navy&#39;,
+</span><span class="">   68: 		&#39;Coast Guard&#39;        =&gt; &#39;Coast Guard&#39;,
+</span><span class="">   69: 		&#39;National Guard&#39;     =&gt; &#39;National Guard&#39;,
+</span><span class="">   70: 		&#39;air force&#39;          =&gt; &#39;air force&#39;,
+</span><span class="">   71: 	},
+</span><span class="">   72: 	# French translations - subset of English keys
+</span><span class="">   73: 	&#39;fr&#39; =&gt; {
+</span><span class="">   74: 		&#39;navy&#39;      =&gt; &#39;marine&#39;,
+</span><span class="">   75: 		&#39;army&#39;      =&gt; &quot;arm\x{e9}e&quot;,
+</span><span class="">   76: 		&#39;RAF&#39;       =&gt; &#39;RAF&#39;,
+</span><span class="">   77: 		&#39;military&#39;  =&gt; &#39;militaire&#39;,
+</span><span class="">   78: 		&#39;marines&#39;   =&gt; &#39;marines&#39;,
+</span><span class="">   79: 		&#39;air force&#39; =&gt; &quot;arm\x{e9}e de l&#39;air&quot;,
+</span><span class="">   80: 	},
+</span><span class="">   81: 	# German translations - subset of English keys
+</span><span class="">   82: 	&#39;de&#39; =&gt; {
+</span><span class="">   83: 		&#39;navy&#39;      =&gt; &#39;Marine&#39;,
+</span><span class="">   84: 		&#39;army&#39;      =&gt; &#39;Armee&#39;,
+</span><span class="">   85: 		&#39;RAF&#39;       =&gt; &#39;RAF&#39;,
+</span><span class="">   86: 		&#39;military&#39;  =&gt; &quot;Milit\x{e4}r&quot;,
+</span><span class="">   87: 		&#39;air force&#39; =&gt; &#39;Luftwaffe&#39;,
+</span><span class="">   88: 	},
+</span><span class="">   89: );
+</span><span class="">   90: 
+</span><span class="">   91: =head1 NAME
+</span><span class="">   92: 
+</span><span class="">   93: Genealogy::Military::Branch - Extract military branch from free-text genealogy notes
+</span><span class="">   94: 
+</span><span class="">   95: =head1 VERSION
+</span><span class="">   96: 
+</span><span class="">   97: Version 0.01
+</span><span class="">   98: 
+</span><span class="">   99: =head1 SYNOPSIS
+</span><span class="">  100: 
+</span><span class="">  101:     use Genealogy::Military::Branch;
+</span><span class="">  102: 
+</span><span class="">  103:     my $detector = Genealogy::Military::Branch-&gt;new();
+</span><span class="">  104: 
+</span><span class="">  105:     my $branch = $detector-&gt;detect(
+</span><span class="">  106:         text =&gt; &#39;He served in the Royal Navy from 1914 to 1918&#39;,
+</span><span class="">  107:     );
+</span><span class="">  108:     # Returns &#39;navy&#39;
+</span><span class="">  109: 
+</span><span class="">  110:     my $branch = $detector-&gt;detect(
+</span><span class="">  111:         text =&gt; &#39;Served with the RAF in Bomber Command&#39;,
+</span><span class="">  112:     );
+</span><span class="">  113:     # Returns &#39;RAF&#39;
+</span><span class="">  114: 
+</span><span class="">  115:     my $branch = $detector-&gt;detect(
+</span><span class="">  116:         text =&gt; &#39;Some unrelated text&#39;,
+</span><span class="">  117:     );
+</span><span class="">  118:     # Returns &#39;military&#39;
+</span><span class="">  119: 
+</span><span class="">  120: =head1 DESCRIPTION
+</span><span class="">  121: 
+</span><span class="">  122: Scans free-text military service notes from genealogy records and returns
+</span><span class="">  123: the name of the military branch mentioned.  Returns C&lt;&#39;military&#39;&gt; (localised)
+</span><span class="">  124: when no specific branch is recognised.
+</span><span class="">  125: 
+</span><span class="">  126: Designed to replace the C&lt;service()&gt; helper in the C&lt;gedcom&gt; and C&lt;ged2site&gt;
+</span><span class="">  127: distributions, which contain duplicate implementations of the same logic.
+</span><span class="">  128: 
+</span><span class="">  129: Detection patterns cover British, US and Commonwealth branches.  The returned
+</span><span class="">  130: string is localised to the system locale, which is detected from the
+</span><span class="">  131: environment at construction time.
+</span><span class="">  132: 
+</span><span class="">  133: =head1 METHODS
+</span><span class="">  134: 
+</span><span class="">  135: =head2 new
+</span><span class="">  136: 
+</span><span class="">  137: =head3 Purpose
+</span><span class="">  138: 
+</span><span class="">  139: Constructs a new branch detector object.
+</span><span class="">  140: 
+</span><span class="">  141: =head3 API Specification
+</span><span class="">  142: 
+</span><span class="">  143: =head4 Input
+</span><span class="">  144: 
+</span><span class="">  145:     {
+</span><span class="">  146:         language =&gt; {
+</span><span class="">  147:             type     =&gt; &#39;string&#39;,
+</span><span class="">  148:             optional =&gt; 1,
+</span><span class="">  149:         },
+</span><span class="">  150:         warn_on_error =&gt; {
+</span><span class="">  151:             type     =&gt; &#39;boolean&#39;,
+</span><span class="">  152:             optional =&gt; 1,
+</span><span class="">  153:             default  =&gt; 0,
+</span><span class="">  154:         },
+</span><span class="">  155:     }
+</span><span class="">  156: 
+</span><span class="">  157: =head4 Output
+</span><span class="">  158: 
+</span><span class="">  159:     { type =&gt; &#39;object&#39;, isa =&gt; &#39;Genealogy::Military::Branch&#39; }
+</span><span class="">  160: 
+</span><span class="">  161: =head3 Arguments
+</span><span class="">  162: 
+</span><span class="">  163: =over 4
+</span><span class="">  164: 
+</span><span class="">  165: =item * C&lt;language&gt; - BCP-47 primary subtag e.g. C&lt;&#39;en&#39;&gt;, C&lt;&#39;fr&#39;&gt;, C&lt;&#39;de&#39;&gt;.
+</span><span class="">  166: If not given, the language is detected from the environment using
+</span><span class="">  167: C&lt;I18N::LangTags::Detect&gt; and the standard locale environment variables,
+</span><span class="">  168: falling back to C&lt;&#39;en&#39;&gt;.  Optional.
+</span><span class="">  169: 
+</span><span class="">  170: =item * C&lt;warn_on_error&gt; - If true, C&lt;carp&gt; is called when C&lt;detect()&gt; is
+</span><span class="">  171: called and no branch is identified in the supplied text.  Optional, defaults
+</span><span class="">  172: to 0.
+</span><span class="">  173: 
+</span><span class="">  174: =back
+</span><span class="">  175: 
+</span><span class="">  176: =head3 Returns
+</span><span class="">  177: 
+</span><span class="">  178: A blessed C&lt;Genealogy::Military::Branch&gt; object.
+</span><span class="">  179: 
+</span><span class="">  180: =head3 Notes
+</span><span class="">  181: 
+</span><span class="">  182: The language is detected and cached once at construction time.
+</span><span class="">  183: 
+</span><span class="">  184: =head3 Example
+</span><span class="">  185: 
+</span><span class="">  186:     my $detector = Genealogy::Military::Branch-&gt;new({
+</span><span class="">  187:         language      =&gt; &#39;fr&#39;,
+</span><span class="">  188:         warn_on_error =&gt; 1,
+</span><span class="">  189:     });
+</span><span class="">  190: 
+</span><span class="">  191: =cut
+</span><span class="">  192: 
+</span><span class="">  193: sub new {
+</span><span class="">  194: 	my $class = shift;
 </span><span class="">  195: 
-</span><span class="">  196: sub new {
-</span><span class="">  197: 	my $class = shift;
+</span><span class="">  196: 	# Accept both hashref and flat list; all constructor arguments are optional
+</span><span class="">  197: 	my $args = Params::Get::get_params(undef, \@_) // {};
 </span><span class="">  198: 
-</span><span class="">  199: 	# Accept both hashref and flat list; all constructor arguments are optional
-</span><span class="">  200: 	my $args = Params::Get::get_params(undef, @_) // {};
-</span><span class="">  201: 
-</span><span class="">  202: 	# Validate constructor arguments against schema
-</span><span class="">  203: 	validate_strict({
-</span><span class="">  204: 		description =&gt; &#39;Genealogy::Military::Branch::new&#39;,
-</span><span class="">  205: 		input       =&gt; $args,
-</span><span class="">  206: 		schema      =&gt; $NEW_SCHEMA,
-</span><span class="">  207: 	});
+</span><span class="">  199: 	# Validate constructor arguments against schema
+</span><span class="">  200: 	$args = validate_strict({
+</span><span class="">  201: 		description =&gt; &#39;Genealogy::Military::Branch::new&#39;,
+</span><span class="">  202: 		input       =&gt; $args,
+</span><span class="">  203: 		schema      =&gt; $NEW_SCHEMA,
+</span><span class="">  204: 	});
+</span><span class="">  205: 
+</span><span class="">  206: 	# Use caller-supplied language or detect from environment
+</span><span class="">  207: 	my $language = $args-&gt;{&#39;language&#39;} // _get_language() // &#39;en&#39;;
 </span><span class="">  208: 
-</span><span class="">  209: 	# Use caller-supplied language or detect from environment
-</span><span class="">  210: 	my $language = $args-&gt;{&#39;language&#39;} // _get_language() // &#39;en&#39;;
+</span><span class="">  209: 	# Load the configuration from a config file, if provided
+</span><span class="">  210: 	$args = Object::Configure::configure($class, $args);
 </span><span class="">  211: 
 </span><span class="">  212: 	# Bless and return the detector object
 </span><span class="">  213: 	return bless {
@@ -510,236 +510,234 @@ Approximate LCSAJ segments: 21<br>
 </span><span class="">  218: 
 </span><span class="">  219: =head2 detect
 </span><span class="">  220: 
-</span><span class="">  221: =head3 Purpose
-</span><span class="">  222: 
-</span><span class="">  223: Scans a free-text string for references to military branches and returns
-</span><span class="">  224: the localised branch name.
+</span><span class="">  221: Scans a free-text string for references to military branches and returns
+</span><span class="">  222: the localised branch name.
+</span><span class="">  223: 
+</span><span class="">  224: =head3 API Specification
 </span><span class="">  225: 
-</span><span class="">  226: =head3 API Specification
+</span><span class="">  226: =head4 Input
 </span><span class="">  227: 
-</span><span class="">  228: =head4 Input
-</span><span class="">  229: 
-</span><span class="">  230:     {
-</span><span class="">  231:         text =&gt; {
-</span><span class="">  232:             type =&gt; &#39;string&#39;,
-</span><span class="">  233:         },
-</span><span class="">  234:     }
+</span><span class="">  228:     {
+</span><span class="">  229:         text =&gt; {
+</span><span class="">  230:             type =&gt; &#39;string&#39;,
+</span><span class="">  231:         },
+</span><span class="">  232:     }
+</span><span class="">  233: 
+</span><span class="">  234: =head4 Output
 </span><span class="">  235: 
-</span><span class="">  236: =head4 Output
+</span><span class="">  236:     { type =&gt; &#39;string&#39; }
 </span><span class="">  237: 
-</span><span class="">  238:     { type =&gt; &#39;string&#39; }
+</span><span class="">  238: =head3 Arguments
 </span><span class="">  239: 
-</span><span class="">  240: =head3 Arguments
+</span><span class="">  240: =over 4
 </span><span class="">  241: 
-</span><span class="">  242: =over 4
-</span><span class="">  243: 
-</span><span class="">  244: =item * C&lt;text&gt; - The free-text string to scan.  Required.  May be passed
-</span><span class="">  245: positionally as a single string.
+</span><span class="">  242: =item * C&lt;text&gt; - The free-text string to scan.  Required.  May be passed
+</span><span class="">  243: positionally as a single string.
+</span><span class="">  244: 
+</span><span class="">  245: =back
 </span><span class="">  246: 
-</span><span class="">  247: =back
+</span><span class="">  247: =head3 Returns
 </span><span class="">  248: 
-</span><span class="">  249: =head3 Returns
-</span><span class="">  250: 
-</span><span class="">  251: A string containing the detected branch name, localised to the language
-</span><span class="">  252: supplied at construction.  Returns C&lt;&#39;military&#39;&gt; (or its localised
-</span><span class="">  253: equivalent) when no branch is detected.  Never returns C&lt;undef&gt;.
+</span><span class="">  249: A string containing the detected branch name, localised to the language
+</span><span class="">  250: supplied at construction.  Returns C&lt;&#39;military&#39;&gt; (or its localised
+</span><span class="">  251: equivalent) when no branch is detected.  Never returns C&lt;undef&gt;.
+</span><span class="">  252: 
+</span><span class="">  253: =head3 Side Effects
 </span><span class="">  254: 
-</span><span class="">  255: =head3 Side Effects
-</span><span class="">  256: 
-</span><span class="">  257: If C&lt;warn_on_error&gt; was set true at construction and no branch is detected,
-</span><span class="">  258: emits a warning via C&lt;carp&gt;.
+</span><span class="">  255: If C&lt;warn_on_error&gt; was set true at construction and no branch is detected,
+</span><span class="">  256: emits a warning via C&lt;carp&gt;.
+</span><span class="">  257: 
+</span><span class="">  258: =head3 Notes
 </span><span class="">  259: 
-</span><span class="">  260: =head3 Notes
-</span><span class="">  261: 
-</span><span class="">  262: Detection patterns are tried in order of specificity.  The first pattern
-</span><span class="">  263: to match wins, so C&lt;&#39;Merchant Navy&#39;&gt; is correctly identified as
-</span><span class="">  264: C&lt;&#39;Merchant Navy&#39;&gt; rather than C&lt;&#39;navy&#39;&gt;.
+</span><span class="">  260: Detection patterns are tried in order of specificity.  The first pattern
+</span><span class="">  261: to match wins, so C&lt;&#39;Merchant Navy&#39;&gt; is correctly identified as
+</span><span class="">  262: C&lt;&#39;Merchant Navy&#39;&gt; rather than C&lt;&#39;navy&#39;&gt;.
+</span><span class="">  263: 
+</span><span class="">  264: =head3 Example
 </span><span class="">  265: 
-</span><span class="">  266: =head3 Example
-</span><span class="">  267: 
-</span><span class="">  268:     # Named argument form
-</span><span class="">  269:     my $branch = $detector-&gt;detect(
-</span><span class="">  270:         text =&gt; &#39;He served in the Royal Engineers during the Great War&#39;,
-</span><span class="">  271:     );
-</span><span class="">  272:     # Returns &#39;Royal Engineers&#39;
-</span><span class="">  273: 
-</span><span class="">  274:     # Positional form
-</span><span class="">  275:     my $branch = $detector-&gt;detect(&#39;Private in the Infantry&#39;);
-</span><span class="">  276:     # Returns &#39;army&#39;
+</span><span class="">  266:     # Named argument form
+</span><span class="">  267:     my $branch = $detector-&gt;detect(
+</span><span class="">  268:         text =&gt; &#39;He served in the Royal Engineers during the Great War&#39;,
+</span><span class="">  269:     );
+</span><span class="">  270:     # Returns &#39;Royal Engineers&#39;
+</span><span class="">  271: 
+</span><span class="">  272:     # Positional form
+</span><span class="">  273:     my $branch = $detector-&gt;detect(&#39;Private in the Infantry&#39;);
+</span><span class="">  274:     # Returns &#39;army&#39;
+</span><span class="">  275: 
+</span><span class="">  276: =cut
 </span><span class="">  277: 
-</span><span class="">  278: =cut
-</span><span class="">  279: 
-</span><span class="">  280: sub detect {
-</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">281 → 298 → 307</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">281 → 298 → 0</span></span>  281: 	my $self = shift;
-</span><span class="">  282: 
-</span><span class="">  283: 	# Normalise parameters: accept positional text string, hash or hashref
-</span><span class="">  284: 	my $params = Params::Get::get_params(&#39;text&#39;, @_);
-</span><span class="">  285: 
-</span><span class="">  286: 	# Validate that text is a required string; validate_strict croaks on failure
-</span><span class="">  287: 	my $validated = validate_strict({
-</span><span class="">  288: 		description =&gt; &#39;Genealogy::Military::Branch::detect&#39;,
-</span><span class="">  289: 		input       =&gt; $params,
-</span><span class="">  290: 		schema      =&gt; $DETECT_SCHEMA,
-</span><span class="">  291: 	});
-</span><span class="">  292: 	my $text = $validated-&gt;{&#39;text&#39;};
-</span><span class="">  293: 	croak &#39;Genealogy::Military::Branch::detect: text is required&#39;
-</span><span class="">  294: 		unless defined $text;
-</span><span class="">  295: 
-</span><span class="">  296: 	# Walk each detector in specificity order; the first match wins
-</span><span class="">  297: 	my $branch;
-</span><span class="">  298: 	for my $d (@DETECTORS) {
-</span><span class="">  299: 		# Each entry has a compiled pattern and an English key for translation
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  300: 		if($text =~ $d-&gt;{&#39;pattern&#39;}) {
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  301: 			$branch = $self-&gt;_translate($d-&gt;{&#39;key&#39;});
-</span><span class="">  302: 			last;
-</span><span class="">  303: 		}
-</span><span class="">  304: 	}
-</span><span class="">  305: 
-</span><span class="">  306: 	# Fall back to the default &#39;military&#39; key when nothing matched
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic."><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">307 → 307 → 315</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">307 → 307 → 0</span></span>  307: 	unless(defined $branch) {
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  308: 		# Optionally alert the caller that no specific branch was identified
-</span><span class="">  309: 		Carp::carp &#39;Genealogy::Military::Branch: no military branch detected&#39;
-</span><span class="">  310: 			if $self-&gt;{&#39;warn_on_error&#39;};
-</span><span class="">  311: 		$branch = $self-&gt;_translate(&#39;military&#39;);
-</span><span class="">  312: 	}
-</span><span class="">  313: 
-</span><span class="">  314: 	# Return the validated branch string; guaranteed to be a defined string
-</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">315 → 315 → 0</span></span>  315: 	return set_return($branch, { type =&gt; &#39;string&#39; });
-</span><span class="">  316: }
-</span><span class="">  317: 
-</span><span class="">  318: # _translate
-</span><span class="">  319: #
-</span><span class="">  320: # Purpose:
-</span><span class="">  321: #   Returns the localised string for an internal branch key, falling back
-</span><span class="">  322: #   through language-specific -&gt; English -&gt; bare key.
-</span><span class="">  323: #
-</span><span class="">  324: # Entry criteria:
-</span><span class="">  325: #   $self - a blessed Genealogy::Military::Branch object
-</span><span class="">  326: #   $key  - a string matching one of the keys in %TRANSLATIONS{&#39;en&#39;}
-</span><span class="">  327: #
-</span><span class="">  328: # Exit status:
-</span><span class="">  329: #   Returns the localised branch name string.  Never returns undef:
-</span><span class="">  330: #   if no translation or English fallback exists, returns $key itself.
-</span><span class="">  331: #
-</span><span class="">  332: # Side effects:
-</span><span class="">  333: #   None.
-</span><span class="">  334: #
-</span><span class="">  335: # Notes:
-</span><span class="">  336: #   The &#39;en&#39; table is the canonical fallback for all languages.
-</span><span class="">  337: #   Keys not present in the language-specific table fall through to
-</span><span class="">  338: #   English, allowing partial translation tables (e.g. &#39;fr&#39; only
-</span><span class="">  339: #   translates the most common branches).
-</span><span class="">  340: 
-</span><span class="">  341: sub _translate {
-</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">342 → 348 → 353</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">342 → 348 → 0</span></span>  342: 	my ($self, $key) = @_;
-</span><span class="">  343: 
-</span><span class="">  344: 	# Get the cached language code from the object
-</span><span class="">  345: 	my $lang = $self-&gt;{&#39;language&#39;} // &#39;en&#39;;
-</span><span class="">  346: 
-</span><span class="">  347: 	# Try the language-specific translation first
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  348: 	if(exists $TRANSLATIONS{$lang} &amp;&amp; exists $TRANSLATIONS{$lang}{$key}) {
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  349: 		return $TRANSLATIONS{$lang}{$key};
-</span><span class="">  350: 	}
-</span><span class="">  351: 
-</span><span class="">  352: 	# Fall back to English, then the bare key as a last resort
-</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">353 → 353 → 0</span></span>  353: 	return $TRANSLATIONS{&#39;en&#39;}{$key} // $key;
-</span><span class="">  354: }
-</span><span class="">  355: 
-</span><span class="">  356: # _get_language
-</span><span class="">  357: #
-</span><span class="">  358: # Purpose:
-</span><span class="">  359: #   Determines the system&#39;s default language using environment variables.
-</span><span class="">  360: #
-</span><span class="">  361: # Entry criteria:
-</span><span class="">  362: #   None.  Reads environment variables directly.
-</span><span class="">  363: #
-</span><span class="">  364: # Exit status:
-</span><span class="">  365: #   Returns a two-letter language code string e.g. &#39;en&#39;, &#39;fr&#39;, &#39;de&#39;,
-</span><span class="">  366: #   or undef if no language can be determined.
-</span><span class="">  367: #
-</span><span class="">  368: # Side effects:
-</span><span class="">  369: #   None.
-</span><span class="">  370: #
-</span><span class="">  371: # Notes:
-</span><span class="">  372: #   Checks in order: I18N::LangTags::Detect, LANGUAGE, LC_ALL,
-</span><span class="">  373: #   LC_MESSAGES, LANG environment variables.
-</span><span class="">  374: #   Returns &#39;en&#39; for C locale.
-</span><span class="">  375: #   See https://www.gnu.org/software/gettext/manual/html_node/Locale-Environment-Variables.html
-</span><span class="">  376: 
-</span><span class="">  377: sub _get_language {
-</span><span class="">  378: 	# Try I18N::LangTags::Detect first for most accurate detection
-</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">379 → 379 → 386</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">379 → 379 → 0</span></span>  379: 	for my $tag (I18N::LangTags::Detect::detect()) {
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  380: 		if($tag =~ /^([a-z]{2})/i) {
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  381: 			return lc($1);
-</span><span class="">  382: 		}
-</span><span class="">  383: 	}
-</span><span class="">  384: 
-</span><span class="">  385: 	# Fall back to checking environment variables in priority order
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic."><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">386 → 386 → 389</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">386 → 386 → 0</span></span>  386: 	if(($ENV{&#39;LANGUAGE&#39;}) &amp;&amp; ($ENV{&#39;LANGUAGE&#39;} =~ /^([a-z]{2})/i)) {
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  387: 		return lc($1);
-</span><span class="">  388: 	}
-</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">389 → 389 → 399</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">389 → 389 → 0</span></span>  389: 	foreach my $variable (&#39;LC_ALL&#39;, &#39;LC_MESSAGES&#39;, &#39;LANG&#39;) {
-</span><span class="">  390: 		my $val = $ENV{$variable};
-</span><span class="">  391: 		next unless defined($val);
-</span><span class="">  392: 		# Extract the two-letter primary language subtag
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  393: 		if($val =~ /^([a-z]{2})/i) {
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  394: 			return lc($1);
-</span><span class="">  395: 		}
-</span><span class="">  396: 	}
-</span><span class="">  397: 
-</span><span class="">  398: 	# Handle C locale explicitly - treat as English
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic."><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">399 → 401 → 0</span></span>  399: 	return &#39;en&#39; if(defined($ENV{&#39;LANG&#39;}) &amp;&amp; $ENV{&#39;LANG&#39;} =~ /^C(\.|$)/);
-</span><p> <b> Mutants (Total: 2, Killed: 2, Survived: 0)</b><p><span class="">  400: 
-</span><span class="">  401: 	return;
-</span><span class="">  402: }
+</span><span class="">  278: sub detect {
+</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">279 → 296 → 305</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">279 → 296 → 0</span></span>  279: 	my $self = shift;
+</span><span class="">  280: 
+</span><span class="">  281: 	# Normalise parameters: accept positional text string, hash or hashref
+</span><span class="">  282: 	my $params = Params::Get::get_params(&#39;text&#39;, \@_);
+</span><span class="">  283: 
+</span><span class="">  284: 	# Validate that text is a required string; validate_strict croaks on failure
+</span><span class="">  285: 	my $validated = validate_strict({
+</span><span class="">  286: 		description =&gt; &#39;Genealogy::Military::Branch::detect&#39;,
+</span><span class="">  287: 		input       =&gt; $params,
+</span><span class="">  288: 		schema      =&gt; $DETECT_SCHEMA,
+</span><span class="">  289: 	});
+</span><span class="">  290: 	my $text = $validated-&gt;{&#39;text&#39;};
+</span><span class="">  291: 	croak &#39;Genealogy::Military::Branch::detect: text is required&#39;
+</span><span class="">  292: 		unless defined $text;
+</span><span class="">  293: 
+</span><span class="">  294: 	# Walk each detector in specificity order; the first match wins
+</span><span class="">  295: 	my $branch;
+</span><span class="">  296: 	for my $d (@DETECTORS) {
+</span><span class="">  297: 		# Each entry has a compiled pattern and an English key for translation
+</span><span class="">  298: 		if($text =~ $d-&gt;{&#39;pattern&#39;}) {
+</span><span class="">  299: 			$branch = $self-&gt;_translate($d-&gt;{&#39;key&#39;});
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  300: 			last;
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  301: 		}
+</span><span class="">  302: 	}
+</span><span class="">  303: 
+</span><span class="">  304: 	# Fall back to the default &#39;military&#39; key when nothing matched
+</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">305 → 305 → 313</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">305 → 305 → 0</span></span>  305: 	unless(defined $branch) {
+</span><span class="">  306: 		# Optionally alert the caller that no specific branch was identified
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  307: 		Carp::carp &#39;Genealogy::Military::Branch: no military branch detected&#39;
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  308: 			if $self-&gt;{&#39;warn_on_error&#39;};
+</span><span class="">  309: 		$branch = $self-&gt;_translate(&#39;military&#39;);
+</span><span class="">  310: 	}
+</span><span class="">  311: 
+</span><span class="">  312: 	# Return the validated branch string; guaranteed to be a defined string
+</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">313 → 313 → 0</span></span>  313: 	return set_return($branch, { type =&gt; &#39;string&#39; });
+</span><span class="">  314: }
+</span><span class="">  315: 
+</span><span class="">  316: # _translate
+</span><span class="">  317: #
+</span><span class="">  318: # Purpose:
+</span><span class="">  319: #   Returns the localised string for an internal branch key, falling back
+</span><span class="">  320: #   through language-specific -&gt; English -&gt; bare key.
+</span><span class="">  321: #
+</span><span class="">  322: # Entry criteria:
+</span><span class="">  323: #   $self - a blessed Genealogy::Military::Branch object
+</span><span class="">  324: #   $key  - a string matching one of the keys in %TRANSLATIONS{&#39;en&#39;}
+</span><span class="">  325: #
+</span><span class="">  326: # Exit status:
+</span><span class="">  327: #   Returns the localised branch name string.  Never returns undef:
+</span><span class="">  328: #   if no translation or English fallback exists, returns $key itself.
+</span><span class="">  329: #
+</span><span class="">  330: # Side effects:
+</span><span class="">  331: #   None.
+</span><span class="">  332: #
+</span><span class="">  333: # Notes:
+</span><span class="">  334: #   The &#39;en&#39; table is the canonical fallback for all languages.
+</span><span class="">  335: #   Keys not present in the language-specific table fall through to
+</span><span class="">  336: #   English, allowing partial translation tables (e.g. &#39;fr&#39; only
+</span><span class="">  337: #   translates the most common branches).
+</span><span class="">  338: 
+</span><span class="">  339: sub _translate {
+</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">340 → 346 → 351</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">340 → 346 → 0</span></span>  340: 	my ($self, $key) = @_;
+</span><span class="">  341: 
+</span><span class="">  342: 	# Get the cached language code from the object
+</span><span class="">  343: 	my $lang = $self-&gt;{&#39;language&#39;} // &#39;en&#39;;
+</span><span class="">  344: 
+</span><span class="">  345: 	# Try the language-specific translation first
+</span><span class="">  346: 	if(exists $TRANSLATIONS{$lang} &amp;&amp; exists $TRANSLATIONS{$lang}{$key}) {
+</span><span class="">  347: 		return $TRANSLATIONS{$lang}{$key};
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  348: 	}
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  349: 
+</span><span class="">  350: 	# Fall back to English, then the bare key as a last resort
+</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">351 → 351 → 0</span></span>  351: 	return $TRANSLATIONS{&#39;en&#39;}{$key} // $key;
+</span><span class="">  352: }
+</span><span class="">  353: 
+</span><span class="">  354: # _get_language
+</span><span class="">  355: #
+</span><span class="">  356: # Purpose:
+</span><span class="">  357: #   Determines the system&#39;s default language using environment variables.
+</span><span class="">  358: #
+</span><span class="">  359: # Entry criteria:
+</span><span class="">  360: #   None.  Reads environment variables directly.
+</span><span class="">  361: #
+</span><span class="">  362: # Exit status:
+</span><span class="">  363: #   Returns a two-letter language code string e.g. &#39;en&#39;, &#39;fr&#39;, &#39;de&#39;,
+</span><span class="">  364: #   or undef if no language can be determined.
+</span><span class="">  365: #
+</span><span class="">  366: # Side effects:
+</span><span class="">  367: #   None.
+</span><span class="">  368: #
+</span><span class="">  369: # Notes:
+</span><span class="">  370: #   Checks in order: I18N::LangTags::Detect, LANGUAGE, LC_ALL,
+</span><span class="">  371: #   LC_MESSAGES, LANG environment variables.
+</span><span class="">  372: #   Returns &#39;en&#39; for C locale.
+</span><span class="">  373: #   See https://www.gnu.org/software/gettext/manual/html_node/Locale-Environment-Variables.html
+</span><span class="">  374: 
+</span><span class="">  375: sub _get_language {
+</span><span class="">  376: 	# Try I18N::LangTags::Detect first for most accurate detection
+</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">377 → 377 → 384</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">377 → 377 → 0</span></span>  377: 	for my $tag (I18N::LangTags::Detect::detect()) {
+</span><span class="">  378: 		if($tag =~ /^([a-z]{2})/i) {
+</span><span class="">  379: 			return lc($1);
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  380: 		}
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  381: 	}
+</span><span class="">  382: 
+</span><span class="">  383: 	# Fall back to checking environment variables in priority order
+</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">384 → 384 → 387</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">384 → 384 → 0</span></span>  384: 	if(($ENV{&#39;LANGUAGE&#39;}) &amp;&amp; ($ENV{&#39;LANGUAGE&#39;} =~ /^([a-z]{2})/i)) {
+</span><span class="">  385: 		return lc($1);
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  386: 	}
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">387 → 387 → 397</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">387 → 387 → 0</span></span>  387: 	foreach my $variable (&#39;LC_ALL&#39;, &#39;LC_MESSAGES&#39;, &#39;LANG&#39;) {
+</span><span class="">  388: 		my $val = $ENV{$variable};
+</span><span class="">  389: 		next unless defined($val);
+</span><span class="">  390: 		# Extract the two-letter primary language subtag
+</span><span class="">  391: 		if($val =~ /^([a-z]{2})/i) {
+</span><span class="">  392: 			return lc($1);
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  393: 		}
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  394: 	}
+</span><span class="">  395: 
+</span><span class="">  396: 	# Handle C locale explicitly - treat as English
+</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">397 → 399 → 0</span></span>  397: 	return &#39;en&#39; if(defined($ENV{&#39;LANG&#39;}) &amp;&amp; $ENV{&#39;LANG&#39;} =~ /^C(\.|$)/);
+</span><span class="">  398: 
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  399: 	return;
+</span><p> <b> Mutants (Total: 2, Killed: 2, Survived: 0)</b><p><span class="">  400: }
+</span><span class="">  401: 
+</span><span class="">  402: =head1 AUTHOR
 </span><span class="">  403: 
-</span><span class="">  404: =head1 AUTHOR
+</span><span class="">  404: Nigel Horne C&lt;&lt; &lt;njh@nigelhorne.com&gt; &gt;&gt;
 </span><span class="">  405: 
-</span><span class="">  406: Nigel Horne C&lt;&lt; &lt;njh@nigelhorne.com&gt; &gt;&gt;
+</span><span class="">  406: =head1 BUGS
 </span><span class="">  407: 
-</span><span class="">  408: =head1 BUGS
-</span><span class="">  409: 
-</span><span class="">  410: Please report bugs via the GitHub issue tracker:
-</span><span class="">  411: L&lt;https://github.com/nigelhorne/Genealogy-Military-Branch/issues&gt;
+</span><span class="">  408: Please report bugs via the GitHub issue tracker:
+</span><span class="">  409: L&lt;https://github.com/nigelhorne/Genealogy-Military-Branch/issues&gt;
+</span><span class="">  410: 
+</span><span class="">  411: =head1 TODO
 </span><span class="">  412: 
-</span><span class="">  413: =head1 TODO
+</span><span class="">  413: =over 4
 </span><span class="">  414: 
-</span><span class="">  415: =over 4
+</span><span class="">  415: =item * Add Australian, Canadian and other Commonwealth branch patterns
 </span><span class="">  416: 
-</span><span class="">  417: =item * Add Australian, Canadian and other Commonwealth branch patterns
+</span><span class="">  417: =item * Add more US-specific patterns (Space Force etc)
 </span><span class="">  418: 
-</span><span class="">  419: =item * Add more US-specific patterns (Space Force etc)
+</span><span class="">  419: =item * Consider a companion C&lt;Genealogy::Military::Rank&gt; module
 </span><span class="">  420: 
-</span><span class="">  421: =item * Consider a companion C&lt;Genealogy::Military::Rank&gt; module
+</span><span class="">  421: =back
 </span><span class="">  422: 
-</span><span class="">  423: =back
+</span><span class="">  423: =head1 SEE ALSO
 </span><span class="">  424: 
-</span><span class="">  425: =head1 SEE ALSO
+</span><span class="">  425: =over 4
 </span><span class="">  426: 
-</span><span class="">  427: =over 4
+</span><span class="">  427: =item * L&lt;Test Dashboard|https://nigelhorne.github.io/Genealogy-Military-Branch/coverage/&gt;
 </span><span class="">  428: 
-</span><span class="">  429: =item * L&lt;Test Dashboard|https://nigelhorne.github.io/Genealogy-Military-Branch/coverage/&gt;
+</span><span class="">  429: =item * L&lt;Genealogy::Occupation&gt;
 </span><span class="">  430: 
-</span><span class="">  431: =item * L&lt;Genealogy::Occupation&gt;
+</span><span class="">  431: =item * L&lt;Params::Get&gt;
 </span><span class="">  432: 
-</span><span class="">  433: =item * L&lt;Params::Get&gt;
+</span><span class="">  433: =item * L&lt;Params::Validate::Strict&gt;
 </span><span class="">  434: 
-</span><span class="">  435: =item * L&lt;Params::Validate::Strict&gt;
+</span><span class="">  435: =item * L&lt;Return::Set&gt;
 </span><span class="">  436: 
-</span><span class="">  437: =item * L&lt;Return::Set&gt;
+</span><span class="">  437: =back
 </span><span class="">  438: 
-</span><span class="">  439: =back
+</span><span class="">  439: =head1 LICENSE AND COPYRIGHT
 </span><span class="">  440: 
-</span><span class="">  441: =head1 LICENSE AND COPYRIGHT
+</span><span class="">  441: Copyright 2026 Nigel Horne.
 </span><span class="">  442: 
-</span><span class="">  443: Copyright 2026 Nigel Horne.
-</span><span class="">  444: 
-</span><span class="">  445: This program is released under the following licence: GPL2
-</span><span class="">  446: If you use it, please let me know.
+</span><span class="">  443: This program is released under the following licence: GPL2
+</span><span class="">  444: If you use it, please let me know.
+</span><span class="">  445: 
+</span><span class="">  446: =cut
 </span><span class="">  447: 
-</span><span class="">  448: =cut
-</span><span class="">  449: 
-</span><span class="">  450: 1;
+</span><span class="">  448: 1;
 </span></pre>
 
 <script>

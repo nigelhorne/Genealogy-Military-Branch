@@ -4,88 +4,88 @@
          "OS" : "linux",
          "abstract" : "Extract military branch from free-text genealogy notes",
          "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
-         "finish" : 1779758941.99391,
+         "finish" : 1779760184.4013,
          "name" : "Genealogy-Military-Branch",
          "perl" : "5.40.4",
          "run" : "-e",
-         "start" : 1779758939.69661,
+         "start" : 1779760181.04303,
          "version" : "0.01"
       },
       {
          "OS" : "linux",
          "abstract" : "Extract military branch from free-text genealogy notes",
          "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
-         "finish" : 1779758939.82082,
+         "finish" : 1779760181.18935,
          "name" : "Genealogy-Military-Branch",
          "perl" : "5.40.4",
          "run" : "-e",
-         "start" : 1779758939.82069,
+         "start" : 1779760181.18922,
          "version" : "0.01"
       },
       {
          "OS" : "linux",
          "abstract" : "Extract military branch from free-text genealogy notes",
          "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
-         "finish" : 1779758940.06515,
+         "finish" : 1779760181.5305,
          "name" : "Genealogy-Military-Branch",
          "perl" : "5.40.4",
          "run" : "t/00-load.t",
-         "start" : 1779758940.04382,
+         "start" : 1779760181.45252,
          "version" : "0.01"
       },
       {
          "OS" : "linux",
          "abstract" : "Extract military branch from free-text genealogy notes",
          "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
-         "finish" : 1779758940.39065,
+         "finish" : 1779760182.02202,
          "name" : "Genealogy-Military-Branch",
          "perl" : "5.40.4",
          "run" : "t/edge_cases.t",
-         "start" : 1779758940.31272,
+         "start" : 1779760181.8384,
          "version" : "0.01"
       },
       {
          "OS" : "linux",
          "abstract" : "Extract military branch from free-text genealogy notes",
          "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
-         "finish" : 1779758940.77507,
+         "finish" : 1779760182.6139,
          "name" : "Genealogy-Military-Branch",
          "perl" : "5.40.4",
          "run" : "t/extended_tests.t",
-         "start" : 1779758940.68824,
+         "start" : 1779760182.39501,
          "version" : "0.01"
       },
       {
          "OS" : "linux",
          "abstract" : "Extract military branch from free-text genealogy notes",
          "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
-         "finish" : 1779758941.13421,
+         "finish" : 1779760183.12927,
          "name" : "Genealogy-Military-Branch",
          "perl" : "5.40.4",
          "run" : "t/function.t",
-         "start" : 1779758941.07408,
+         "start" : 1779760182.98697,
          "version" : "0.01"
       },
       {
          "OS" : "linux",
          "abstract" : "Extract military branch from free-text genealogy notes",
          "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
-         "finish" : 1779758941.49049,
+         "finish" : 1779760183.657,
          "name" : "Genealogy-Military-Branch",
          "perl" : "5.40.4",
          "run" : "t/integration.t",
-         "start" : 1779758941.41256,
+         "start" : 1779760183.47387,
          "version" : "0.01"
       },
       {
          "OS" : "linux",
          "abstract" : "Extract military branch from free-text genealogy notes",
          "dir" : "/home/runner/work/Genealogy-Military-Branch/Genealogy-Military-Branch",
-         "finish" : 1779758941.86934,
+         "finish" : 1779760184.23379,
          "name" : "Genealogy-Military-Branch",
          "perl" : "5.40.4",
          "run" : "t/unit.t",
-         "start" : 1779758941.7831,
+         "start" : 1779760184.0216,
          "version" : "0.01"
       }
    ],
@@ -99,27 +99,27 @@
             "uncoverable" : 0
          },
          "condition" : {
-            "covered" : 20,
-            "error" : 3,
-            "percentage" : 86.9565217391304,
+            "covered" : 19,
+            "error" : 4,
+            "percentage" : 82.6086956521739,
             "total" : 23,
             "uncoverable" : 0
          },
          "statement" : {
-            "covered" : 62,
+            "covered" : 66,
             "percentage" : 100,
-            "total" : 62
+            "total" : 66
          },
          "subroutine" : {
-            "covered" : 13,
+            "covered" : 14,
             "percentage" : 100,
-            "total" : 13
+            "total" : 14
          },
          "total" : {
-            "covered" : 115,
-            "error" : 3,
-            "percentage" : 97.4576271186441,
-            "total" : 118,
+            "covered" : 119,
+            "error" : 4,
+            "percentage" : 96.7479674796748,
+            "total" : 123,
             "uncoverable" : 0
          }
       },
@@ -132,27 +132,27 @@
             "uncoverable" : 0
          },
          "condition" : {
-            "covered" : 20,
-            "error" : 3,
-            "percentage" : 86.9565217391304,
+            "covered" : 19,
+            "error" : 4,
+            "percentage" : 82.6086956521739,
             "total" : 23,
             "uncoverable" : 0
          },
          "statement" : {
-            "covered" : 62,
+            "covered" : 66,
             "percentage" : 100,
-            "total" : 62
+            "total" : 66
          },
          "subroutine" : {
-            "covered" : 13,
+            "covered" : 14,
             "percentage" : 100,
-            "total" : 13
+            "total" : 14
          },
          "total" : {
-            "covered" : 115,
-            "error" : 3,
-            "percentage" : 97.4576271186441,
-            "total" : 118,
+            "covered" : 119,
+            "error" : 4,
+            "percentage" : 96.7479674796748,
+            "total" : 123,
             "uncoverable" : 0
          }
       }

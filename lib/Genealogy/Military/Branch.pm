@@ -290,6 +290,8 @@ sub detect {
 		schema      => $DETECT_SCHEMA,
 	});
 	my $text = $validated->{'text'};
+	croak 'Genealogy::Military::Branch::detect: text is required'
+		unless defined $text;
 
 	# Walk each detector in specificity order; the first match wins
 	my $branch;

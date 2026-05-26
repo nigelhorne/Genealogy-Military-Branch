@@ -7,6 +7,7 @@ MANIFEST.SKIP
 README.md
 t/00-load.t
 t/edge_cases.t
+t/extended_tests.t
 t/function.t
 t/integration.t
 t/unit.t

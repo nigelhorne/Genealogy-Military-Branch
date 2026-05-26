@@ -169,6 +169,7 @@ Please report bugs via the GitHub issue tracker:
 
 # SEE ALSO
 
+- [Test Dashboard](https://nigelhorne.github.io/Genealogy-Military-Branch/coverage/)
 - [Genealogy::Occupation](https://metacpan.org/pod/Genealogy%3A%3AOccupation)
 - [Params::Get](https://metacpan.org/pod/Params%3A%3AGet)
 - [Params::Validate::Strict](https://metacpan.org/pod/Params%3A%3AValidate%3A%3AStrict)

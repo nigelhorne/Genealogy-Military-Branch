@@ -426,6 +426,8 @@ L<https://github.com/nigelhorne/Genealogy-Military-Branch/issues>
 
 =over 4
 
+=item * L<Test Dashboard|https://nigelhorne.github.io/Genealogy-Military-Branch/coverage/>
+
 =item * L<Genealogy::Occupation>
 
 =item * L<Params::Get>

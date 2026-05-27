@@ -587,17 +587,17 @@ Approximate LCSAJ segments: 21<br>
 </span><span class="">  295: 	my $branch;
 </span><span class="">  296: 	for my $d (@DETECTORS) {
 </span><span class="">  297: 		# Each entry has a compiled pattern and an English key for translation
-</span><span class="">  298: 		if($text =~ $d-&gt;{&#39;pattern&#39;}) {
-</span><span class="">  299: 			$branch = $self-&gt;_translate($d-&gt;{&#39;key&#39;});
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  300: 			last;
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  301: 		}
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  298: 		if($text =~ $d-&gt;{&#39;pattern&#39;}) {
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  299: 			$branch = $self-&gt;_translate($d-&gt;{&#39;key&#39;});
+</span><span class="">  300: 			last;
+</span><span class="">  301: 		}
 </span><span class="">  302: 	}
 </span><span class="">  303: 
 </span><span class="">  304: 	# Fall back to the default &#39;military&#39; key when nothing matched
-</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">305 → 305 → 313</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">305 → 305 → 0</span></span>  305: 	unless(defined $branch) {
-</span><span class="">  306: 		# Optionally alert the caller that no specific branch was identified
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  307: 		Carp::carp &#39;Genealogy::Military::Branch: no military branch detected&#39;
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  308: 			if $self-&gt;{&#39;warn_on_error&#39;};
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic."><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">305 → 305 → 313</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">305 → 305 → 0</span></span>  305: 	unless(defined $branch) {
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  306: 		# Optionally alert the caller that no specific branch was identified
+</span><span class="">  307: 		Carp::carp &#39;Genealogy::Military::Branch: no military branch detected&#39;
+</span><span class="">  308: 			if $self-&gt;{&#39;warn_on_error&#39;};
 </span><span class="">  309: 		$branch = $self-&gt;_translate(&#39;military&#39;);
 </span><span class="">  310: 	}
 </span><span class="">  311: 
@@ -635,10 +635,10 @@ Approximate LCSAJ segments: 21<br>
 </span><span class="">  343: 	my $lang = $self-&gt;{&#39;language&#39;} // &#39;en&#39;;
 </span><span class="">  344: 
 </span><span class="">  345: 	# Try the language-specific translation first
-</span><span class="">  346: 	if(exists $TRANSLATIONS{$lang} &amp;&amp; exists $TRANSLATIONS{$lang}{$key}) {
-</span><span class="">  347: 		return $TRANSLATIONS{$lang}{$key};
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  348: 	}
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  349: 
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  346: 	if(exists $TRANSLATIONS{$lang} &amp;&amp; exists $TRANSLATIONS{$lang}{$key}) {
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  347: 		return $TRANSLATIONS{$lang}{$key};
+</span><span class="">  348: 	}
+</span><span class="">  349: 
 </span><span class="">  350: 	# Fall back to English, then the bare key as a last resort
 </span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">351 → 351 → 0</span></span>  351: 	return $TRANSLATIONS{&#39;en&#39;}{$key} // $key;
 </span><span class="">  352: }
@@ -667,29 +667,29 @@ Approximate LCSAJ segments: 21<br>
 </span><span class="">  375: sub _get_language {
 </span><span class="">  376: 	# Try I18N::LangTags::Detect first for most accurate detection
 </span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">377 → 377 → 384</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">377 → 377 → 0</span></span>  377: 	for my $tag (I18N::LangTags::Detect::detect()) {
-</span><span class="">  378: 		if($tag =~ /^([a-z]{2})/i) {
-</span><span class="">  379: 			return lc($1);
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  380: 		}
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  381: 	}
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  378: 		if($tag =~ /^([a-z]{2})/i) {
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  379: 			return lc($1);
+</span><span class="">  380: 		}
+</span><span class="">  381: 	}
 </span><span class="">  382: 
 </span><span class="">  383: 	# Fall back to checking environment variables in priority order
-</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">384 → 384 → 387</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">384 → 384 → 0</span></span>  384: 	if(($ENV{&#39;LANGUAGE&#39;}) &amp;&amp; ($ENV{&#39;LANGUAGE&#39;} =~ /^([a-z]{2})/i)) {
-</span><span class="">  385: 		return lc($1);
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  386: 	}
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">387 → 387 → 397</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">387 → 387 → 0</span></span>  387: 	foreach my $variable (&#39;LC_ALL&#39;, &#39;LC_MESSAGES&#39;, &#39;LANG&#39;) {
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic."><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">384 → 384 → 387</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">384 → 384 → 0</span></span>  384: 	if(($ENV{&#39;LANGUAGE&#39;}) &amp;&amp; ($ENV{&#39;LANGUAGE&#39;} =~ /^([a-z]{2})/i)) {
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  385: 		return lc($1);
+</span><span class="">  386: 	}
+</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">387 → 387 → 397</span></span><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">387 → 387 → 0</span></span>  387: 	foreach my $variable (&#39;LC_ALL&#39;, &#39;LC_MESSAGES&#39;, &#39;LANG&#39;) {
 </span><span class="">  388: 		my $val = $ENV{$variable};
 </span><span class="">  389: 		next unless defined($val);
 </span><span class="">  390: 		# Extract the two-letter primary language subtag
-</span><span class="">  391: 		if($val =~ /^([a-z]{2})/i) {
-</span><span class="">  392: 			return lc($1);
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  393: 		}
-</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  394: 	}
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  391: 		if($val =~ /^([a-z]{2})/i) {
+</span><p> <b> Mutants (Total: 1, Killed: 1, Survived: 0)</b><p><span class="">  392: 			return lc($1);
+</span><span class="">  393: 		}
+</span><span class="">  394: 	}
 </span><span class="">  395: 
 </span><span class="">  396: 	# Handle C locale explicitly - treat as English
-</span><span class=""><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">397 → 399 → 0</span></span>  397: 	return &#39;en&#39; if(defined($ENV{&#39;LANG&#39;}) &amp;&amp; $ENV{&#39;LANG&#39;} =~ /^C(\.|$)/);
-</span><span class="">  398: 
-</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic.">  399: 	return;
-</span><p> <b> Mutants (Total: 2, Killed: 2, Survived: 0)</b><p><span class="">  400: }
+</span><span class="killed tooltip" data-tooltip="Mutations here were killed. Tests are effectively covering this logic."><span class="lcsaj-tip"><span class="lcsaj-dot">●</span><span class="lcsaj-tip-text">397 → 399 → 0</span></span>  397: 	return &#39;en&#39; if(defined($ENV{&#39;LANG&#39;}) &amp;&amp; $ENV{&#39;LANG&#39;} =~ /^C(\.|$)/);
+</span><p> <b> Mutants (Total: 2, Killed: 2, Survived: 0)</b><p><span class="">  398: 
+</span><span class="">  399: 	return;
+</span><span class="">  400: }
 </span><span class="">  401: 
 </span><span class="">  402: =head1 AUTHOR
 </span><span class="">  403: 
